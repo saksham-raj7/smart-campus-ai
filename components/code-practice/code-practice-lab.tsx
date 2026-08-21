@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, ChevronRight, Code2, Lightbulb, LoaderCircle, RotateCcw, Send, Terminal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { recordReadiness } from "@/lib/readiness";
 import { practiceLanguages, practiceProblems, runCodeDemo, type CodeExecutionResult, type PracticeLanguageId, type PracticeProblem } from "@/lib/code-practice";
 
 type Filter = "All" | "Data Structures" | "Algorithms" | "SQL" | "Recommended";
@@ -24,7 +25,7 @@ export function CodePracticeLab({ onClose }: { onClose: () => void }) {
   function selectProblem(problem: PracticeProblem) { setProblemId(problem.id); setCode(problem.starterCode[language]); setResult(null); setState("idle"); setError(""); }
   function selectLanguage(next: PracticeLanguageId) { setLanguage(next); setCode(selectedProblem.starterCode[next]); setResult(null); setState("idle"); }
   async function run() { setState("running"); setError(""); try { setResult(await runCodeDemo({ language, code, problemId })); setState("idle"); } catch (caught) { setError(caught instanceof Error ? caught.message : "Code execution is temporarily unavailable."); setState("error"); } }
-  async function submit() { setState("running"); setError(""); try { setResult(await runCodeDemo({ language, code, problemId })); setState("submitted"); } catch (caught) { setError(caught instanceof Error ? caught.message : "Code execution is temporarily unavailable."); setState("error"); } }
+  async function submit() { setState("running"); setError(""); try { const output=await runCodeDemo({ language, code, problemId }); setResult(output); setState("submitted"); if(output.status==="passed") recordReadiness("coding", `${selectedProblem.title} practice completed`, selectedProblem.skill); } catch (caught) { setError(caught instanceof Error ? caught.message : "Code execution is temporarily unavailable."); setState("error"); } }
   const lineCount = Math.max(8, code.split("\n").length);
   return <div className="fixed inset-0 z-50 overflow-y-auto bg-muted/95 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Code Practice Lab">
     <div className="mx-auto min-h-full max-w-[1600px] p-3 sm:p-5 lg:p-6"><header className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-sm"><div className="flex items-center gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"><Code2 className="size-4" /></span><div><h1 className="text-base font-semibold">Code Practice Lab</h1><p className="text-xs text-muted-foreground">Focused practice for your Software Engineer path</p></div></div><Button variant="outline" size="sm" onClick={onClose}>Back to Learn &amp; Practice <X data-icon="inline-end" /></Button></header>

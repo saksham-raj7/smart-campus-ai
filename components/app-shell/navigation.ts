@@ -1,4 +1,4 @@
-import { Bot, BookOpen, Building2, ChartNoAxesCombined, LayoutDashboard, MessagesSquare, Settings, Target, UsersRound, type LucideIcon } from "lucide-react";
+import { Bot, BookOpen, Building2, ChartNoAxesCombined, FileText, LayoutDashboard, MessagesSquare, Settings, Target, UsersRound, BriefcaseBusiness, type LucideIcon } from "lucide-react";
 
 export type NavigationItem = { href: string; icon: LucideIcon; label: string };
 
@@ -14,5 +14,7 @@ export const primaryNavigation: NavigationItem[] = [
 export const secondaryNavigation: NavigationItem[] = [
   { href: "/company-question-bank", icon: Building2, label: "Company Question Bank" },
   { href: "/peer-insights", icon: UsersRound, label: "Peer Insights" },
+  { href: "/resume-builder", icon: FileText, label: "Resume Builder" },
+  { href: "/jobs", icon: BriefcaseBusiness, label: "Jobs & Internships" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
