@@ -22,6 +22,7 @@ import { AppShell } from "@/components/app-shell/app-shell";
 import { CodePracticeLab } from "@/components/code-practice/code-practice-lab";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { RecommendedResource } from "@/components/learning/recommended-resource";
 
 type FocusSkill = {
   name: string;
@@ -256,5 +257,6 @@ export default function LearnPracticePage() {
     {selectedCourse ? <LearningDialog course={selectedCourse} lessonIndex={lessonIndex} progress={courseProgress[selectedCourse.id] ?? 0} onClose={closeExperience} onPrevious={() => setLessonIndex((current) => Math.max(0, current - 1))} onContinue={() => setLessonIndex((current) => Math.min(selectedCourse.lessons.length - 1, current + 1))} onComplete={() => setCourseProgress((current) => ({ ...current, [selectedCourse.id]: 100 }))} /> : null}
     {selectedPractice ? <PracticeDialog selectedPractice={selectedPractice} selectedMode={practiceMode ?? selectedPractice.title} submitted={practiceSubmitted} onClose={closeExperience} onSelectMode={startPractice} onSubmit={() => setPracticeSubmitted(true)} /> : null}
     {isCodePracticeOpen ? <CodePracticeLab onClose={() => setIsCodePracticeOpen(false)} /> : null}
+    <section aria-label="Personalized video resource"><RecommendedResource /></section>
   </div></AppShell>;
 }

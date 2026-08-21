@@ -1,5 +1,6 @@
 /** Shared frontend contract. Replace these demo records with API responses when available. */
-export type User = { name: string; email: string; targetRole: string; studentStatus: string; education: string };
+export type WorkspaceRole = "student" | "placement_officer";
+export type User = { name: string; email: string; targetRole: string; studentStatus: string; education: string; role?: WorkspaceRole };
 export type Skill = { name: string; current: number; target: number; state: "mastered" | "improving" | "attention" };
 export type CareerProfile = { readiness: number; targetRole: string; topGap: string; skills: Skill[] };
 export type ProgressData = { learning: number; coding: number; communication: number; interview: number; readinessTrend: number[] };
