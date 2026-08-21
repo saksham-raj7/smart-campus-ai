@@ -3,7 +3,7 @@ import { Bot, BookOpen, Building2, ChartNoAxesCombined, LayoutDashboard, Message
 export type NavigationItem = { href: string; icon: LucideIcon; label: string };
 
 export const primaryNavigation: NavigationItem[] = [
-  { href: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/career-skill-gap", icon: Target, label: "Career & Skill Gap" },
   { href: "/learn-practice", icon: BookOpen, label: "Learn & Practice" },
   { href: "/ai-communication", icon: MessagesSquare, label: "AI Communication" },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   BrainCircuit,
@@ -135,6 +136,7 @@ function AnalysisSkeleton() {
 }
 
 export default function CareerSkillGapPage() {
+  const router = useRouter();
   const [targetRole, setTargetRole] = useState(roleOptions[0]);
   const [analysis, setAnalysis] = useState<RoleAnalysis | null>(demoAnalyses[roleOptions[0]]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -168,11 +170,8 @@ export default function CareerSkillGapPage() {
   }
 
   function handleDemoAction(action: "learning" | "practice", skill: string) {
-    setDemoActionMessage(
-      action === "learning"
-        ? `Learning path preview for ${skill} is coming soon.`
-        : `AI practice for ${skill} is coming soon.`,
-    );
+    setDemoActionMessage(`Opening a focused ${skill} ${action === "learning" ? "learning path" : "AI coaching session"}…`);
+    router.push(action === "learning" ? "/learn-practice" : "/ai-career-coach");
   }
 
   const skillsByStatus = (status: SkillStatus) => analysis?.skills.filter((skill) => skill.status === status) ?? [];
