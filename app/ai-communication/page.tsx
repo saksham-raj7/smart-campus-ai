@@ -27,7 +27,6 @@ const demoFeedback: CoachFeedback = {
   suggestions: ["Start with the situation in one sentence.", "Explain your specific contribution.", "End with measurable impact."],
   strongerOpening: "I faced a performance bottleneck in our course project when response times increased as the number of users grew. I profiled the application, identified an inefficient query, and introduced caching to improve the experience.",
 };
-const demoTranscript = "In a group project, our dashboard became slow as more data was added. I traced the issue to repeated database queries, worked with my teammate to add caching, and reduced the load time significantly.";
 const followUpQuestion = "What trade-offs did you consider when choosing your solution?";
 
 function ProgressBar({ value, className = "bg-primary" }: { value: number; className?: string }) {
@@ -55,7 +54,7 @@ export default function AiCommunicationPage() {
   const goNext = () => { if (questionIndex === interviewQuestions.length - 1) setIsComplete(true); else changeQuestion(questionIndex + 1); };
   const startAgain = () => { setQuestionIndex(0); resetAnswerState(); setIsComplete(false); };
   async function startRecording() { setRecordingError(""); if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setRecordingError("Voice recording is not supported in this browser. Please type your answer instead."); setResponseMode("voice"); return; } try { stream.current = await navigator.mediaDevices.getUserMedia({ audio: true }); const chunks: Blob[] = []; const media = new MediaRecorder(stream.current); recorder.current = media; media.ondataavailable = event => { if (event.data.size) chunks.push(event.data); }; media.onstop = () => { stream.current?.getTracks().forEach(track => track.stop()); const blob = new Blob(chunks, { type: media.mimeType || "audio/webm" }); setAudioUrl(URL.createObjectURL(blob)); setIsRecording(false); }; media.onerror = () => { setRecordingError("Your recording could not be captured. You can try again or type your answer."); setIsRecording(false); }; media.start(); setResponseMode("voice"); setIsRecording(true); } catch { setResponseMode("voice"); setRecordingError("Microphone access was denied or unavailable. You can type your answer instead."); } }
-  function stopRecording() { recorder.current?.state === "recording" && recorder.current.stop(); }
+  function stopRecording() { if (recorder.current?.state === "recording") recorder.current.stop(); }
 
   return <AppShell title="AI Communication"><div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
     <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-medium text-primary"><span className="flex size-5 items-center justify-center rounded-md bg-primary/10"><Sparkles className="size-3" /></span>AI-POWERED COMMUNICATION</div><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">AI Communication</h1><p className="mt-1.5 max-w-2xl text-sm leading-6 text-muted-foreground">Practice interviews, improve your answers, and build confident communication with AI.</p></div><span className="w-fit rounded-full border border-primary/15 bg-primary/[0.035] px-3 py-1.5 text-xs font-medium text-primary">AI interview coach</span></section>

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Skillora",
-  description: "AI-powered career intelligence for students.",
+  description: "Career intelligence for students.",
 };
 
 export default function RootLayout({

@@ -18,7 +18,6 @@ import { AppShell } from "@/components/app-shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SkillRadar } from "@/components/ui/skill-radar";
-import { score, useReadiness } from "@/lib/readiness";
 
 type SkillStatus = "strong" | "improving" | "attention";
 
@@ -138,8 +137,6 @@ function AnalysisSkeleton() {
 }
 
 export default function CareerSkillGapPage() {
-  const readinessData = useReadiness();
-  const sharedReadiness = score(readinessData);
   const router = useRouter();
   const [targetRole, setTargetRole] = useState(roleOptions[0]);
   const [analysis, setAnalysis] = useState<RoleAnalysis | null>(demoAnalyses[roleOptions[0]]);

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowRight, Code2, Sparkles, Target, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles, Target, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { SkillRadar } from "@/components/ui/skill-radar";
 import { score, useReadiness } from "@/lib/readiness";

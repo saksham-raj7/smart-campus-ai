@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { ArrowRight, CheckCircle2, Clock3, Sparkles } from "lucide-react";
+import { ArrowRight, Clock3 } from "lucide-react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { companyQuestions, type CompanyQuestion } from "@/lib/career-data";
 import { recordReadiness } from "@/lib/readiness";

@@ -2,7 +2,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, Check, ChevronDown, ChartNoAxesCombined, LayoutDashboard, LogOut, Settings, Sparkles, Target, UsersRound, X } from "lucide-react";
+import { Building2, ChevronDown, ChartNoAxesCombined, LayoutDashboard, LogOut, Settings, Sparkles, Target, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { canAccessAdmin, endSession, getSession, initials, setDemoWorkspace } from "@/lib/auth";
 import { cn } from "@/lib/utils";
