@@ -5,12 +5,304 @@ import { Bot, Send, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/app-shell/app-shell";
 import { careerProfile, type CoachMessage } from "@/lib/career-data";
 
-const prompts = ["What is my biggest skill gap?", "What should I focus on this week?", "Help me prepare for my target role.", "How can I improve my interview performance?"];
-const now = () => new Intl.DateTimeFormat("en", { hour: "numeric", minute: "2-digit" }).format(new Date());
+const prompts = [
+  "What is my biggest skill gap?",
+  "What should I focus on this week?",
+  "Help me prepare for my target role.",
+  "How can I improve my interview performance?",
+];
+
+const now = () =>
+  new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date());
 
 export default function CoachPage() {
-  const [messages, setMessages] = useState<CoachMessage[]>([{ id: "welcome", role: "assistant", content: "I’m Aira, your AI Career Coach. I can help you turn your goals, practice, and readiness signals into focused next steps. What would you like to work on?", time: "Now" }]);
-  const [input, setInput] = useState(""); const [thinking, setThinking] = useState(false); const [error, setError] = useState(""); const [lastMessage, setLastMessage] = useState("");
-  async function send(value = input) { const message = value.trim(); if (!message || thinking) return; const userMessage: CoachMessage = { id: crypto.randomUUID(), role: "user", content: message, time: now() }; setMessages((current) => [...current, userMessage]); setInput(""); setLastMessage(message); setError(""); setThinking(true); try { const history = [...messages, userMessage].filter((item) => item.id !== "welcome").map(({ role, content }) => ({ role, content })); const response = await fetch("/api/ai/career-coach", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message, history, profile: { targetRole: careerProfile.targetRole, readiness: careerProfile.readiness, topGap: careerProfile.topGap } }) }); const data = await response.json(); if (!response.ok || typeof data.response !== "string") throw new Error(data.error || "Aira could not respond right now."); setMessages((current) => [...current, { id: crypto.randomUUID(), role: "assistant", content: data.response, time: now() }]); } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Aira could not respond right now. Please retry."); } finally { setThinking(false); } }
-  return <AppShell title="AI Career Coach"><div className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[1fr_300px]"><section className="flex min-h-[calc(100dvh-9rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"><header className="flex items-center gap-3 border-b border-border bg-primary/[.025] p-5"><span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground"><Bot className="size-5" aria-hidden="true"/></span><div><h1 className="font-semibold">Aira, your Career Coach</h1><p className="text-xs text-muted-foreground">Career intelligence · Guided practice · Next best action</p></div><span className="ml-auto flex items-center gap-1 text-xs text-emerald-600"><span className="size-2 rounded-full bg-emerald-500"/>Ready</span></header><div className="flex-1 space-y-5 overflow-y-auto p-5" aria-live="polite">{messages.map((message) => <div key={message.id} className={message.role === "user" ? "ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground" : "max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-4 py-3 text-sm leading-6"}>{message.content}<p className={message.role === "user" ? "mt-1 text-[10px] text-primary-foreground/65" : "mt-1 text-[10px] text-muted-foreground"}>{message.time}</p></div>)}{thinking ? <div role="status" className="flex w-fit items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground"><span className="size-2 animate-bounce rounded-full bg-primary"/><span className="size-2 animate-bounce rounded-full bg-primary [animation-delay:150ms]"/><span className="size-2 animate-bounce rounded-full bg-primary [animation-delay:300ms]"/>Aira is thinking…</div> : null}</div><div className="border-t border-border p-4"><div className="flex flex-wrap gap-2 pb-3">{prompts.map((prompt) => <button key={prompt} type="button" disabled={thinking} onClick={() => send(prompt)} className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/35 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50">{prompt}</button>)}</div>{error ? <div role="alert" className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive"><span>{error}</span><button type="button" onClick={() => send(lastMessage)} disabled={thinking || !lastMessage} className="font-semibold underline disabled:opacity-50">Retry</button></div> : null}<form onSubmit={(event) => { event.preventDefault(); send(); }} className="flex gap-2 rounded-xl border border-input bg-background p-1.5 focus-within:ring-3 focus-within:ring-ring/20"><input value={input} disabled={thinking} onChange={(event) => setInput(event.target.value)} className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed" placeholder="Ask about your next career move…"/><button disabled={thinking || !input.trim()} aria-label="Send message" className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"><Send className="size-4" aria-hidden="true"/></button></form></div></section><aside className="space-y-4"><section className="rounded-xl border border-border bg-card p-5"><p className="text-xs font-bold tracking-wider text-primary">YOUR CAREER CONTEXT</p><div className="mt-4 space-y-4 text-sm"><p><span className="block text-xs text-muted-foreground">Target role</span><span className="font-semibold">{careerProfile.targetRole}</span></p><p><span className="block text-xs text-muted-foreground">Current readiness</span><span className="font-semibold">{careerProfile.readiness}% · rising</span></p><p><span className="block text-xs text-muted-foreground">Top skill gap</span><span className="font-semibold text-rose-600">{careerProfile.topGap} · 38%</span></p></div></section><section className="rounded-xl border border-primary/20 bg-primary/[.035] p-5"><Sparkles className="size-4 text-primary" aria-hidden="true"/><h2 className="mt-3 font-semibold">Coach recommendation</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Ask Aira to turn your top skill gap into a focused practice plan.</p><button type="button" disabled={thinking} onClick={() => send(`Create a ${careerProfile.topGap} plan for me`)} className="mt-4 text-sm font-semibold text-primary disabled:opacity-50">Build my plan →</button></section></aside></div></AppShell>;
+  const [messages, setMessages] = useState<CoachMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        "I’m Aira, your AI Career Coach. I can help you turn your goals, practice, and readiness signals into focused next steps. What would you like to work on?",
+      time: "Now",
+    },
+  ]);
+
+  const [input, setInput] = useState("");
+  const [thinking, setThinking] = useState(false);
+  const [error, setError] = useState("");
+  const [lastMessage, setLastMessage] = useState("");
+
+  async function send(value = input) {
+    const message = value.trim();
+
+    if (!message || thinking) return;
+
+    const userMessage: CoachMessage = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content: message,
+      time: now(),
+    };
+
+    setMessages((current) => [...current, userMessage]);
+    setInput("");
+    setLastMessage(message);
+    setError("");
+    setThinking(true);
+
+    try {
+      const history = [...messages, userMessage]
+        .filter((item) => item.id !== "welcome")
+        .map(({ role, content }) => ({
+          role,
+          content,
+        }));
+
+      const response = await fetch("/api/ai/career-coach", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message,
+          history,
+          profile: {
+            targetRole: careerProfile.targetRole,
+            readiness: careerProfile.readiness,
+            topGap: careerProfile.topGap,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      /*
+       * Backend returns:
+       *
+       * {
+       *   success: true,
+       *   data: {
+       *     message: "AI response..."
+       *   }
+       * }
+       *
+       * So we must read data.data.message.
+       */
+      const reply = data?.data?.message;
+
+      if (!response.ok || typeof reply !== "string") {
+        throw new Error(
+          data?.error || "Aira could not respond right now."
+        );
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: reply,
+          time: now(),
+        },
+      ]);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Aira could not respond right now. Please retry."
+      );
+    } finally {
+      setThinking(false);
+    }
+  }
+
+  return (
+    <AppShell title="AI Career Coach">
+      <div className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[1fr_300px]">
+        <section className="flex min-h-[calc(100dvh-9rem)] flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+          <header className="flex items-center gap-3 border-b border-border bg-primary/[.025] p-5">
+            <span className="grid size-10 place-items-center rounded-xl bg-primary text-primary-foreground">
+              <Bot className="size-5" aria-hidden="true" />
+            </span>
+
+            <div>
+              <h1 className="font-semibold">Aira, your Career Coach</h1>
+              <p className="text-xs text-muted-foreground">
+                Career intelligence · Guided practice · Next best action
+              </p>
+            </div>
+
+            <span className="ml-auto flex items-center gap-1 text-xs text-emerald-600">
+              <span className="size-2 rounded-full bg-emerald-500" />
+              Ready
+            </span>
+          </header>
+
+          <div
+            className="flex-1 space-y-5 overflow-y-auto p-5"
+            aria-live="polite"
+          >
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={
+                  message.role === "user"
+                    ? "ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground"
+                    : "max-w-[90%] rounded-2xl rounded-bl-md bg-muted px-4 py-3 text-sm leading-6"
+                }
+              >
+                {message.content}
+
+                <p
+                  className={
+                    message.role === "user"
+                      ? "mt-1 text-[10px] text-primary-foreground/65"
+                      : "mt-1 text-[10px] text-muted-foreground"
+                  }
+                >
+                  {message.time}
+                </p>
+              </div>
+            ))}
+
+            {thinking ? (
+              <div
+                role="status"
+                className="flex w-fit items-center gap-2 rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground"
+              >
+                <span className="size-2 animate-bounce rounded-full bg-primary" />
+                <span className="size-2 animate-bounce rounded-full bg-primary [animation-delay:150ms]" />
+                <span className="size-2 animate-bounce rounded-full bg-primary [animation-delay:300ms]" />
+                Aira is thinking…
+              </div>
+            ) : null}
+          </div>
+
+          <div className="border-t border-border p-4">
+            <div className="flex flex-wrap gap-2 pb-3">
+              {prompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  disabled={thinking}
+                  onClick={() => send(prompt)}
+                  className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground hover:border-primary/35 hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
+
+            {error ? (
+              <div
+                role="alert"
+                className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+              >
+                <span>{error}</span>
+
+                <button
+                  type="button"
+                  onClick={() => send(lastMessage)}
+                  disabled={thinking || !lastMessage}
+                  className="font-semibold underline disabled:opacity-50"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : null}
+
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                send();
+              }}
+              className="flex gap-2 rounded-xl border border-input bg-background p-1.5 focus-within:ring-3 focus-within:ring-ring/20"
+            >
+              <input
+                value={input}
+                disabled={thinking}
+                onChange={(event) => setInput(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent px-3 text-sm outline-none disabled:cursor-not-allowed"
+                placeholder="Ask about your next career move…"
+              />
+
+              <button
+                disabled={thinking || !input.trim()}
+                aria-label="Send message"
+                className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Send className="size-4" aria-hidden="true" />
+              </button>
+            </form>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="rounded-xl border border-border bg-card p-5">
+            <p className="text-xs font-bold tracking-wider text-primary">
+              YOUR CAREER CONTEXT
+            </p>
+
+            <div className="mt-4 space-y-4 text-sm">
+              <p>
+                <span className="block text-xs text-muted-foreground">
+                  Target role
+                </span>
+                <span className="font-semibold">
+                  {careerProfile.targetRole}
+                </span>
+              </p>
+
+              <p>
+                <span className="block text-xs text-muted-foreground">
+                  Current readiness
+                </span>
+                <span className="font-semibold">
+                  {careerProfile.readiness}% · rising
+                </span>
+              </p>
+
+              <p>
+                <span className="block text-xs text-muted-foreground">
+                  Top skill gap
+                </span>
+                <span className="font-semibold text-rose-600">
+                  {careerProfile.topGap} · 38%
+                </span>
+              </p>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-primary/20 bg-primary/[.035] p-5">
+            <Sparkles
+              className="size-4 text-primary"
+              aria-hidden="true"
+            />
+
+            <h2 className="mt-3 font-semibold">
+              Coach recommendation
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Ask Aira to turn your top skill gap into a focused practice
+              plan.
+            </p>
+
+            <button
+              type="button"
+              disabled={thinking}
+              onClick={() =>
+                send(`Create a ${careerProfile.topGap} plan for me`)
+              }
+              className="mt-4 text-sm font-semibold text-primary disabled:opacity-50"
+            >
+              Build my plan →
+            </button>
+          </section>
+        </aside>
+      </div>
+    </AppShell>
+  );
 }

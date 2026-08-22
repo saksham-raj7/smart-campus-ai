@@ -1,7 +1,212 @@
 "use client";
+
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AlertCircle, BarChart3, Settings2, Sparkles, Users } from "lucide-react";
+import {
+  AlertCircle,
+  BarChart3,
+  Settings2,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { AppShell } from "@/components/app-shell/app-shell";
-import { canAccessAdmin, getSession } from "@/lib/auth";
-const content:Record<string,{title:string;description:string;icon:typeof BarChart3;items:string[]}>={"cohort-analytics":{title:"Cohort Analytics",description:"Readiness distribution and preparation trends across selected cohorts.",icon:BarChart3,items:["Overall readiness: 68%","Placement-ready: 29%","Top gap: System Design"]},"skill-benchmarks":{title:"Skill Benchmarks",description:"Role thresholds used to evaluate career readiness.",icon:Settings2,items:["JavaScript 75%","React 75%","Data Structures 80%","Communication 72%"]},"ai-assessment-studio":{title:"AI Assessment Studio",description:"Recent assessment evaluations and operational health.",icon:Sparkles,items:["Mock interview · 82% · Completed","Coding review · 91% · Completed","Communication assessment · 76% · Completed"]},"student-insights":{title:"Student Insights",description:"Privacy-conscious aggregate strengths and improvement patterns.",icon:Users,items:["Strongest: JavaScript","Common gap: System Design","Improvement trend: +5 points"]}};
-export default function AdminSection(){const params=useParams<{section:string}>(),router=useRouter(),entry=content[params.section];const authorized=typeof window!=="undefined"&&canAccessAdmin(getSession());if(!authorized)return <AppShell title="Access Restricted"><div className="mx-auto grid min-h-[60dvh] max-w-lg place-items-center text-center"><div><AlertCircle className="mx-auto size-10 text-destructive"/><h2 className="mt-4 text-xl font-semibold">Access Restricted</h2><p className="mt-2 text-sm text-muted-foreground">You don&apos;t have permission to access the Placement Command Center.</p><button onClick={()=>router.push("/dashboard")} className="mt-5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Return to Student Workspace</button></div></div></AppShell>;if(!entry)return <AppShell title="Not found"><div className="p-8">This administrative view is not available.</div></AppShell>;const Icon=entry.icon;return <AppShell title={entry.title}><div className="mx-auto max-w-7xl"><p className="text-xs font-bold tracking-wider text-primary">PLACEMENT INTELLIGENCE</p><h1 className="mt-2 text-3xl font-semibold">{entry.title}</h1><p className="mt-2 text-sm text-muted-foreground">{entry.description}</p><div className="mt-6 grid gap-4 md:grid-cols-3">{entry.items.map(item=><article key={item} className="rounded-2xl border border-border bg-card p-5 shadow-sm"><Icon className="size-5 text-primary"/><p className="mt-5 text-lg font-semibold">{item}</p><p className="mt-2 text-xs text-muted-foreground">Updated from sample cohort signals</p></article>)}</div><section className="mt-5 rounded-2xl border border-border bg-card p-5"><h2 className="font-semibold">{params.section==="skill-benchmarks"?"Benchmark settings":"Recent activity"}</h2><div className="mt-4 space-y-3">{entry.items.map(item=><div key={item} className="flex justify-between border-b border-border pb-3 text-sm"><span>{item}</span><span className="text-primary">Healthy</span></div>)}</div></section></div></AppShell>}
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { canAccessAdmin, getSessionUser } from "@/lib/auth";
+
+const content: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    icon: typeof BarChart3;
+    items: string[];
+  }
+> = {
+  "cohort-analytics": {
+    title: "Cohort Analytics",
+    description:
+      "Readiness distribution and preparation trends across selected cohorts.",
+    icon: BarChart3,
+    items: [
+      "Overall readiness: 68%",
+      "Placement-ready: 29%",
+      "Top gap: System Design",
+    ],
+  },
+  "skill-benchmarks": {
+    title: "Skill Benchmarks",
+    description:
+      "Role thresholds used to evaluate career readiness.",
+    icon: Settings2,
+    items: [
+      "JavaScript 75%",
+      "React 75%",
+      "Data Structures 80%",
+      "Communication 72%",
+    ],
+  },
+  "ai-assessment-studio": {
+    title: "AI Assessment Studio",
+    description:
+      "Recent assessment evaluations and operational health.",
+    icon: Sparkles,
+    items: [
+      "Mock interview · 82% · Completed",
+      "Coding review · 91% · Completed",
+      "Communication assessment · 76% · Completed",
+    ],
+  },
+  "student-insights": {
+    title: "Student Insights",
+    description:
+      "Privacy-conscious aggregate strengths and improvement patterns.",
+    icon: Users,
+    items: [
+      "Strongest: JavaScript",
+      "Common gap: System Design",
+      "Improvement trend: +5 points",
+    ],
+  },
+};
+
+export default function AdminSection() {
+  const params = useParams<{ section: string }>();
+  const router = useRouter();
+
+  const entry = content[params.section];
+
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    async function checkAccess() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const sessionUser = getSessionUser(user);
+
+      setAuthorized(canAccessAdmin(sessionUser));
+    }
+
+    checkAccess();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const sessionUser = getSessionUser(session?.user ?? null);
+
+      setAuthorized(canAccessAdmin(sessionUser));
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  if (authorized === null) {
+    return (
+      <div className="grid min-h-dvh place-items-center">
+        <span className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <AppShell title="Access Restricted">
+        <div className="mx-auto grid min-h-[60dvh] max-w-lg place-items-center text-center">
+          <div>
+            <AlertCircle className="mx-auto size-10 text-destructive" />
+
+            <h2 className="mt-4 text-xl font-semibold">
+              Access Restricted
+            </h2>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              You don&apos;t have permission to access the Placement
+              Command Center.
+            </p>
+
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="mt-5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Return to Student Workspace
+            </button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!entry) {
+    return (
+      <AppShell title="Not found">
+        <div className="p-8">
+          This administrative view is not available.
+        </div>
+      </AppShell>
+    );
+  }
+
+  const Icon = entry.icon;
+
+  return (
+    <AppShell title={entry.title}>
+      <div className="mx-auto max-w-7xl">
+        <p className="text-xs font-bold tracking-wider text-primary">
+          PLACEMENT INTELLIGENCE
+        </p>
+
+        <h1 className="mt-2 text-3xl font-semibold">
+          {entry.title}
+        </h1>
+
+        <p className="mt-2 text-sm text-muted-foreground">
+          {entry.description}
+        </p>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {entry.items.map((item) => (
+            <article
+              key={item}
+              className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+            >
+              <Icon className="size-5 text-primary" />
+
+              <p className="mt-5 text-lg font-semibold">
+                {item}
+              </p>
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                Updated from sample cohort signals
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <section className="mt-5 rounded-2xl border border-border bg-card p-5">
+          <h2 className="font-semibold">
+            {params.section === "skill-benchmarks"
+              ? "Benchmark settings"
+              : "Recent activity"}
+          </h2>
+
+          <div className="mt-4 space-y-3">
+            {entry.items.map((item) => (
+              <div
+                key={item}
+                className="flex justify-between border-b border-border pb-3 text-sm"
+              >
+                <span>{item}</span>
+                <span className="text-primary">Healthy</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
