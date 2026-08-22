@@ -458,9 +458,6 @@ export async function GET() {
         student.id !== currentStudent.id
     );
 
-    /*
-     * Minimum five comparable peers.
-     */
     if (peers.length < MIN_COHORT_SIZE) {
       return NextResponse.json({
         success: true,
@@ -470,10 +467,6 @@ export async function GET() {
             "There are not enough comparable students to provide meaningful peer benchmarking.",
           minimum_peer_count: MIN_COHORT_SIZE,
           available_peer_count: peers.length,
-          career_goal: currentStudent.career_goal,
-          current_student: {
-            readiness: round(currentMetrics.readiness),
-          },
         },
       });
     }
@@ -502,10 +495,6 @@ export async function GET() {
           minimum_peer_count: MIN_COHORT_SIZE,
           available_peer_count:
             peerReadinessValues.length,
-          career_goal: currentStudent.career_goal,
-          current_student: {
-            readiness: round(currentMetrics.readiness),
-          },
         },
       });
     }
@@ -757,10 +746,6 @@ export async function GET() {
             (a.gap ?? 0)
         )[0];
 
-    /*
-     * Explicitly convert nullable gap to a number.
-     * This prevents TypeScript TS18047.
-     */
     const biggestGapValue =
       biggestGap?.gap ?? 0;
 
@@ -774,7 +759,7 @@ export async function GET() {
     }
 
     // =========================================================
-    // 21. FINAL RESPONSE
+    // 21. FRONTEND-FRIENDLY FINAL RESPONSE
     // =========================================================
 
     return NextResponse.json({
@@ -783,41 +768,52 @@ export async function GET() {
       data: {
         status: "ready",
 
-        career_goal:
+        readiness: {
+          current:
+            round(currentMetrics.readiness) ?? 0,
+
+          peerAverage:
+            round(peerAverageReadiness) ?? 0,
+
+          percentile:
+            percentile ?? 0,
+        },
+
+        skills: skillBenchmarksResponse.map(
+          (skill) => ({
+            skill: skill.skill_name,
+
+            current:
+              skill.current_score ?? 0,
+
+            peerAverage:
+              skill.peer_average_score ?? 0,
+
+            target:
+              skill.target_score,
+          })
+        ),
+
+        commonGaps: commonSkillGaps.map(
+          (gap) => ({
+            skill: gap.skill_name,
+
+            percentage:
+              gap.cohort_gap_percentage,
+          })
+        ),
+
+        careerGoal:
           currentStudent.career_goal,
 
         cohort: {
           type: "same_career_goal",
-          peer_count: peers.length,
-          minimum_peer_count:
+          peerCount: peers.length,
+          minimumPeerCount:
             MIN_COHORT_SIZE,
         },
 
-        current_student: {
-          readiness:
-            round(currentMetrics.readiness),
-
-          percentile,
-
-          contributes_to_anonymous_benchmarking:
-            currentStudentAllowsBenchmarking,
-        },
-
-        peer_benchmark: {
-          average_readiness:
-            round(
-              peerAverageReadiness
-            ),
-        },
-
-        skill_benchmarks:
-          skillBenchmarksResponse,
-
-        common_skill_gaps:
-          commonSkillGaps,
-
-        actionable_insights:
-          actionableInsights,
+        actionableInsights,
       },
     });
   } catch (error) {
